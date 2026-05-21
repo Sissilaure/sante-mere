@@ -19,3 +19,4 @@ joblib==1.5.3
 # Utilitaires
 pandas==2.3.3
 pillow==12.1.0
+transformers>=4.40.0
