@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
+  --color-brand-emerald: #059669;
+  --color-brand-gold: #fbbf24;
+  --color-brand-pink: #ec4899;
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: rgba(255, 255, 255, 0.7);
+  --card-foreground: #0f172a;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: #059669;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 1.5rem;
+  
+  /* Legacy mapping for old components */
+  --emerald-600: #059669;
+  --pink-500: #ec4899;
+}
+
+/* ── Base Reset & Premium Feel ──────────────────────────────── */
+
+* {
+  border-color: #e2e8f0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  background: 
+    radial-gradient(at 0% 0%, rgba(5, 150, 105, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
+    var(--background);
+  min-height: 100vh;
+}
+
+/* ── Glassmorphism Utilities ────────────────────────────────── */
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* ── Custom Animations ──────────────────────────────────────── */
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ── Typography ────────────────────────────────────────────── */
+
+h1, h2, h3, h4 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* ── Premium Buttons ────────────────────────────────────────── */
+
+.btn-premium {
+  @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 font-bold text-white transition-all duration-300 rounded-2xl bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-500/30 active:scale-95;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-bold text-gray-700 transition-all duration-300 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 hover:shadow-md active:scale-95;
+}
+
+/* ── Chat Specifics ─────────────────────────────────────────── */
+
+.chat-bubble-user {
+  @apply bg-emerald-600 text-white rounded-3xl rounded-tr-none px-5 py-3 shadow-md max-w-[85%] self-end;
+}
+
+.chat-bubble-ai {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  @apply rounded-3xl rounded-tl-none px-5 py-3 max-w-[85%] self-start;
+}
+
+/* ── Sidebar Nav ────────────────────────────────────────────── */
+
+.nav-link-active {
+  @apply bg-emerald-600 text-white shadow-lg shadow-emerald-600/20;
+}
+
+/* ── Custom Scrollbar ───────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ── Legacy Compat ─────────────────────────────────────────── */
+.field-input {
+  @apply w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-200 transition-all;
+}
