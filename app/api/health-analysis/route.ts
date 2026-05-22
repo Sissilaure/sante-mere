@@ -4,7 +4,7 @@ import { openRouterChat } from '../../lib/openrouter';
 interface HealthAnalysisInput {
   history?: Array<{ role: 'user' | 'assistant'; text?: string }>;
   journal?: Array<{ date?: string; symptom?: string; note?: string }>;
-  carnetData?: Record<string, any>;
+  carnetData?: Record<string, unknown>;
 }
 
 export interface HealthAnalysisResponse {
@@ -21,60 +21,6 @@ export interface HealthAnalysisResponse {
   nextQuestions: string[];
   modelUsed: string;
   heartRate?: number;
-}
-
-function countInfantWarnings(history: HealthAnalysisInput['history'], journal: HealthAnalysisInput['journal'], carnetData: HealthAnalysisInput['carnetData']) {
-  const warnings: string[] = [];
-
-  const textSources = [
-    ...(history ?? []).map((item) => item.text?.toLowerCase() ?? ''),
-    ...(journal ?? []).map((entry) => `${entry.symptom ?? ''} ${entry.note ?? ''}`.toLowerCase()),
-    JSON.stringify(carnetData ?? {}).toLowerCase(),
-  ];
-
-  const keywords = [
-    { term: 'diarrhée', desc: 'Diarrhée infantile' },
-    { term: 'vomissement', desc: 'Vomissements' },
-    { term: 'convulsion', desc: 'Convulsions (Urgence)' },
-    { term: 'toux', desc: 'Toux persistante' },
-    { term: 'respiration rapide', desc: 'Difficulté respiratoire (Urgence)' },
-    { term: 'refus de téter', desc: 'Refus de s\'alimenter (Urgence)' },
-    { term: 'somnolence', desc: 'Léthargie ou somnolence extrême' },
-  ];
-
-  for (const text of textSources) {
-    for (const kw of keywords) {
-      if (text.includes(kw.term) && !warnings.includes(kw.desc)) {
-        warnings.push(kw.desc);
-      }
-    }
-  }
-
-  const temp = Number(carnetData?.temperature ?? 36.5);
-  if (temp >= 38.0) {
-    warnings.push('Fièvre détectée');
-  } else if (temp < 35.5) {
-    warnings.push('Hypothermie détectée');
-  }
-
-  const ageMonths = Number(carnetData?.ageMonths ?? 0);
-  if (ageMonths <= 3 && temp >= 38.0) {
-    warnings.push('Fièvre chez nourrisson de moins de 3 mois (Urgence)');
-  }
-
-  const hydration = String(carnetData?.hydration ?? '').toLowerCase();
-  if (hydration.includes('faible') || hydration.includes('moins de 3')) {
-    warnings.push('Déshydratation suspectée');
-  }
-
-  return warnings;
-}
-
-function getInfantRiskLevel(warnings: string[], ageMonths: number, temp: number) {
-  const isUrgent = warnings.some(w => w.includes('(Urgence)')) || temp >= 39.0 || (ageMonths <= 3 && temp >= 38.0);
-  if (isUrgent || warnings.length >= 3) return 'Rouge';
-  if (warnings.length >= 1 || temp >= 38.0 || temp < 35.5) return 'Orange';
-  return 'Vert';
 }
 
 function getInfantIndicator(value: string | number | undefined, kind: 'stress' | 'nutrition' | 'hydration') {
@@ -108,103 +54,6 @@ function computeInfantHeartRate(temp: number, symptoms: string) {
   return rate;
 }
 
-function buildFallbackReport(input: HealthAnalysisInput): HealthAnalysisResponse {
-  const carnet = input.carnetData ?? {};
-  const temp = Number(carnet.temperature ?? 36.8);
-  const ageMonths = Number(carnet.ageMonths ?? 3);
-  
-  const symptomsJoined = [
-    ...(input.history ?? []).map((item) => item.text ?? ''),
-    ...(input.journal ?? []).map((entry) => `${entry.symptom ?? ''} ${entry.note ?? ''}`),
-  ].join(' ');
-
-  const warnings = countInfantWarnings(input.history, input.journal, carnet);
-  const riskLevel = getInfantRiskLevel(warnings, ageMonths, temp);
-
-  const indicators = {
-    tension: (temp >= 38.0 ? 'élevée' : 'normal') as 'normal' | 'élevée',
-    stress: getInfantIndicator(symptomsJoined + ' ' + riskLevel, 'stress') as 'Faible' | 'Modéré' | 'Élevé',
-    nutrition: getInfantIndicator(carnet.alimentation ?? '', 'nutrition') as 'Excellent' | 'Bon' | 'À améliorer',
-    hydration: getInfantIndicator(carnet.hydration ?? '', 'hydration') as 'Bonne' | 'Moyenne' | 'Faible',
-  };
-  
-  const heartRate = computeInfantHeartRate(temp, symptomsJoined);
-
-  const recommendations: string[] = [];
-  const nextQuestions: string[] = [];
-
-  // Custom pediatric rules
-  if (temp >= 38.0) {
-    if (ageMonths <= 3) {
-      recommendations.push('URGENCE : Fièvre chez un nourrisson de moins de 3 mois. Rendez-vous immédiatement dans un centre de santé.');
-    } else {
-      recommendations.push('Donner du paracétamol pédiatrique selon le poids, déshabiller le bébé (laisser en body) et bien l\'hydrater.');
-    }
-    nextQuestions.push('La fièvre est-elle accompagnée de vomissements ou d\'une somnolence inhabituelle ?');
-  }
-
-  if (indicators.hydration === 'Faible') {
-    recommendations.push('URGENCE DÉSHYDRATATION : Proposer des SRO (Sels de Réhydratation Orale) par petites gorgées et consulter d\'urgence.');
-    nextQuestions.push('Combien de fois le bébé a-t-il uriné ces dernières 24 heures ? Ses yeux semblent-ils creusés ?');
-  }
-
-  if (indicators.nutrition === 'À améliorer') {
-    if (ageMonths < 6) {
-      recommendations.push('Encourager l\'allaitement maternel exclusif à la demande. Éviter toute eau ou tisane.');
-    } else {
-      recommendations.push('Assurer une diversification alimentaire riche en nutriments locaux (bouillie enrichie).');
-    }
-  }
-
-  // Burkina Faso vaccination advisor
-  if (ageMonths === 0) {
-    recommendations.push('Rappel Vaccins BF : S\'assurer que les vaccins de naissance (BCG, VPO 0, HépB) ont été administrés.');
-  } else if (ageMonths >= 2 && ageMonths < 3) {
-    recommendations.push('Rappel Vaccins BF : Prochain rendez-vous à 6 semaines pour DTC-HepB-Hib 1, VPO 1, Rota 1, Pneumo 1.');
-  } else if (ageMonths >= 5 && ageMonths < 8) {
-    recommendations.push('Rappel Vaccins BF : Planifier les doses du vaccin contre le paludisme R21/Matrix-M (introduit à 5, 6 et 7 mois).');
-  } else if (ageMonths >= 9 && ageMonths < 10) {
-    recommendations.push('Rappel Vaccins BF : Planifier le vaccin Rougeole-Rubéole (RR 1) et Fièvre Jaune (VAA) à 9 mois.');
-  } else if (ageMonths >= 15) {
-    recommendations.push('Rappel Vaccins BF : Pensez au rappel de 15 mois (RR 2, Méningite A, Paludisme 4).');
-  }
-
-  if (riskLevel === 'Vert') {
-    recommendations.push('Continuer le suivi de croissance mensuel et l\'allaitement. Garder le calendrier vaccinal à jour.');
-  }
-
-  const summary = `Bilan pédiatrique de bébé (${ageMonths} mois). Risque global : ${riskLevel}. ${warnings.length > 0 ? `Points observés : ${warnings.join(', ')}.` : 'Aucun signal critique détecté pour le moment.'}`;
-
-  const reportLines = [
-    `### Bilan Pédiatrique (Fallback Clinique)`,
-    `- Âge de l'enfant : **${ageMonths} mois**`,
-    `- Température corporelle : **${temp} °C** (${temp >= 38.0 ? 'Fièvre' : temp < 35.5 ? 'Hypothermie' : 'Normale'})`,
-    `- Niveau de Risque : **${riskLevel}**`,
-    `- Alimentation : ${carnet.alimentation ?? 'Non spécifiée'}`,
-    `- Hydratation : ${indicators.hydration}`,
-    ``,
-    `### Recommandations Immédiates`,
-    ...recommendations.map((item) => `- ${item}`),
-    ``,
-    `### Signaux de Vigilance`,
-    ...warnings.length > 0 ? warnings.map((item) => `- ${item}`) : ['- Aucun signal critique immédiat.'],
-    ``,
-    `### Questions à préparer pour le pédiatre`,
-    ...nextQuestions.length > 0 ? nextQuestions.map((item) => `- ${item}`) : ['- Comment se passe le sommeil et le comportement global ?'],
-  ];
-
-  return {
-    report: reportLines.join('\n'),
-    summary,
-    riskLevel,
-    indicators,
-    recommendations,
-    nextQuestions,
-    modelUsed: 'fallback-heuristic-infant',
-    heartRate,
-  };
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as HealthAnalysisInput;
@@ -212,7 +61,13 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json(buildFallbackReport(body));
+      return NextResponse.json(
+        {
+          error:
+            "Configuration manquante: OPENROUTER_API_KEY n'est pas chargée côté Next.js (utiliser .env.local à la racine du projet).",
+        },
+        { status: 500 }
+      );
     }
 
     const systemPrompt = `Tu es un pédiatre expert de renom spécialisé dans le suivi des nourrissons de 0 à 24 mois en Afrique subsaharienne. Ton rôle est d'analyser les constantes physiologiques d'un bébé (âge en mois, poids, taille, température, alimentation, hydratation) et ses symptômes. Rédige un bilan structuré, clair et professionnel. Incorpore des alertes claires basées sur le calendrier vaccinal officiel du Burkina Faso et des rappels de prévention clinique.`;
@@ -249,8 +104,8 @@ export async function POST(req: NextRequest) {
         indicators: {
           tension: hasFever ? 'élevée' : 'normal',
           stress: isUrgent ? 'Élevé' : hasFever ? 'Modéré' : 'Faible',
-          nutrition: getInfantIndicator(carnet.alimentation, 'nutrition') as 'Excellent' | 'Bon' | 'À améliorer',
-          hydration: getInfantIndicator(carnet.hydration, 'hydration') as 'Bonne' | 'Moyenne' | 'Faible',
+          nutrition: getInfantIndicator(String(carnet.alimentation ?? ''), 'nutrition') as 'Excellent' | 'Bon' | 'À améliorer',
+          hydration: getInfantIndicator(String(carnet.hydration ?? ''), 'hydration') as 'Bonne' | 'Moyenne' | 'Faible',
         },
         recommendations: [
           `Surveiller la température corporelle toutes les 6 heures en cas d'inconfort.`,
@@ -263,8 +118,9 @@ export async function POST(req: NextRequest) {
         heartRate,
       });
     } catch (error: unknown) {
-      console.error('OpenRouter infant analysis failed, applying heuristic fallback:', error);
-      return NextResponse.json(buildFallbackReport(body));
+      console.error('OpenRouter infant analysis failed:', error);
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      return NextResponse.json({ error: `Erreur service IA: ${message}` }, { status: 502 });
     }
   } catch (error: unknown) {
     console.error(error);
@@ -272,3 +128,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+

@@ -30,6 +30,25 @@ type GrowthEntry = {
   temp: number;
 };
 
+function readStoredString(key: string, fallback = '') {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readStoredJson<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 const QUICK = [
   'Bébé a 6 mois, que changer dans son alimentation ?',
   'Diarrhée et vomissements depuis ce matin, que faire ?',
@@ -123,30 +142,18 @@ export default function BebePage() {
   const endRef = useRef<HTMLDivElement>(null);
 
   // State Vaccins
-  const [birthDate, setBirthDate] = useState<string>('');
-  const [completedVaccines, setCompletedVaccines] = useState<Record<string, boolean>>({});
+  const [birthDate, setBirthDate] = useState<string>(() => readStoredString('keneya_bebe_birthdate', ''));
+  const [completedVaccines, setCompletedVaccines] = useState<Record<string, boolean>>(() =>
+    readStoredJson<Record<string, boolean>>('keneya_vaccines_status', {})
+  );
 
   // State Croissance
-  const [growthData, setGrowthData] = useState<GrowthEntry[]>([]);
+  const [growthData, setGrowthData] = useState<GrowthEntry[]>(() =>
+    readStoredJson<GrowthEntry[]>('keneya_growth_data', [])
+  );
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [temp, setTemp] = useState('');
-
-  // Initialisation LocalStorage
-  useEffect(() => {
-    try {
-      const savedBirthDate = localStorage.getItem('keneya_bebe_birthdate');
-      if (savedBirthDate) setBirthDate(savedBirthDate);
-
-      const savedVaccines = localStorage.getItem('keneya_vaccines_status');
-      if (savedVaccines) setCompletedVaccines(JSON.parse(savedVaccines));
-
-      const savedGrowth = localStorage.getItem('keneya_growth_data');
-      if (savedGrowth) setGrowthData(JSON.parse(savedGrowth));
-    } catch (e) {
-      console.error('Error loading localStorage:', e);
-    }
-  }, []);
 
   // Auto-scroll chat
   useEffect(() => {

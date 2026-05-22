@@ -240,7 +240,7 @@ export default function DashboardPage() {
           setIsRecording(false);
         }
       }, 10000);
-    } catch (err) {
+    } catch {
       setHeartbeatError('Erreur d\'accès au microphone.');
     }
   };

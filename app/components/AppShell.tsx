@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
   ScanText,
-  HeartPulse,
   Baby,
   Info,
   Mail,
@@ -254,4 +253,3 @@ export function AppShell({
     </div>
   );
 }
-

@@ -2,7 +2,7 @@
 
 import { AppShell } from '../../components/AppShell';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Baby, ScanText, Trash2, ArrowRight } from 'lucide-react';
 
 type StoredQuestion = { text: string; at: string };
@@ -22,6 +22,12 @@ export default function AgentDashboardPage() {
   const [logged] = useState(() => hasAgentSession());
   const [refresh, setRefresh] = useState(0);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [nowTs, setNowTs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTs(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   void refresh;
   const kpis = {
@@ -104,7 +110,7 @@ export default function AgentDashboardPage() {
             <ScanText size={18} className="text-emerald-700" />
           </div>
           <div className="mt-3 text-4xl font-extrabold text-gray-900">{kpis.carnetAnalyses}</div>
-          <div className="mt-1 text-sm text-gray-600">Nombre d'analyses effectuées sur cet appareil.</div>
+          <div className="mt-1 text-sm text-gray-600">Nombre d&apos;analyses effectuées sur cet appareil.</div>
           <Link
             href="/carnet"
             className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white hover:bg-emerald-700"
@@ -163,9 +169,8 @@ export default function AgentDashboardPage() {
             <div className={`grid gap-3 ${showAllQuestions ? 'md:grid-cols-2' : ''}`}>
               {(showAllQuestions ? bebe : bebe.slice(0, 6)).map((q, idx) => {
                 const date = new Date(q.at);
-                const now = Date.now();
-                const isRecent = now - date.getTime() < 3600000;
-                const timeAgo = getTimeAgo(now - date.getTime());
+                const isRecent = nowTs - date.getTime() < 3600000;
+                const timeAgo = getTimeAgo(nowTs - date.getTime());
 
                 return (
                   <div
@@ -194,7 +199,7 @@ export default function AgentDashboardPage() {
                     </div>
 
                     <p className="text-sm leading-relaxed text-gray-900 font-medium line-clamp-4">
-                      "{q.text}"
+                      &quot;{q.text}&quot;
                     </p>
 
                     <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100/50 px-2.5 py-1.5">

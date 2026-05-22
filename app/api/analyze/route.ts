@@ -91,6 +91,14 @@ function evaluateVaccinationStatus(extractedVaccines: ExtractedVaccine[], childA
   return { upToDate, upcomingVaccines, missingUrgent };
 }
 
+function resolveAgeMonth(ageInput: FormDataEntryValue | null): number | null {
+  if (ageInput && !isNaN(Number(ageInput))) {
+    const parsed = Number(ageInput);
+    return parsed >= 0 ? parsed : 0;
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -102,8 +110,16 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
+    const inputAgeMonth = resolveAgeMonth(ageInput);
+
     if (!apiKey) {
-      return NextResponse.json({ error: 'Configuration : OPENROUTER_API_KEY manquante.' }, { status: 500 });
+      return NextResponse.json(
+        {
+          error:
+            "Configuration manquante: OPENROUTER_API_KEY n'est pas chargée côté Next.js (utiliser .env.local à la racine du projet).",
+        },
+        { status: 500 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
@@ -137,10 +153,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let ageMonth: number | null = null;
-    if (ageInput && !isNaN(Number(ageInput))) {
-      ageMonth = Number(ageInput);
-    } else if (extraction.date_de_naissance) {
+    let ageMonth: number | null = inputAgeMonth;
+    if (ageMonth === null && extraction.date_de_naissance) {
       const birthDate = new Date(extraction.date_de_naissance);
       const now = new Date();
       const diffMonth = (now.getFullYear() - birthDate.getFullYear()) * 12 +

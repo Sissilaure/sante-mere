@@ -34,7 +34,7 @@ export default function AProposPage() {
                 <Code2 size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-extrabold text-gray-900">Vision & OCR</div>
-                  <div className="mt-1 text-sm text-gray-600">Extraction structurée des données du carnet papier via analyse d'image. Point d'entrée non-intrusif.</div>
+                  <div className="mt-1 text-sm text-gray-600">Extraction structurée des données du carnet papier via analyse d&apos;image. Point d&apos;entrée non-intrusif.</div>
                 </div>
               </div>
             </li>
@@ -74,7 +74,7 @@ export default function AProposPage() {
             </div>
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
               <div className="font-semibold text-emerald-900">Chat Spécialisé (Bébé)</div>
-              <p className="mt-1 text-sm text-emerald-800/80">Questions structurées sur santé nourrisson, alimentation, signes d'alerte. Réponses guidées.</p>
+              <p className="mt-1 text-sm text-emerald-800/80">Questions structurées sur santé nourrisson, alimentation, signes d&apos;alerte. Réponses guidées.</p>
             </div>
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
               <div className="font-semibold text-emerald-900">Dashboard Agent</div>
@@ -123,4 +123,7 @@ export default function AProposPage() {
     </AppShell>
   );
 }
+
+
+
 

@@ -31,10 +31,6 @@ function HumanModel({ data }: { data: HealthData }) {
     }
   });
 
-  const alertColor = data.riskLevel === 'Rouge' || data.alert ? '#ff2d55' : data.riskLevel === 'Orange' ? '#f59e0b' : '#00ffa3';
-  const safeColor = '#00ffa3';
-  const currentColor = data.alert ? alertColor : safeColor;
-
   return (
     <group ref={bodyGroup}>
       {/* Tête */}
