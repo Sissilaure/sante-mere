@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
   {
     role: 'user',
     content: [
-      { type: 'input_text', text: 'Analyse ce carnet de santé et extrais les vaccins en JSON strict.' },
+      { type: 'text', text: 'Analyse ce carnet de santé et extrais les vaccins en JSON strict.' },
       { type: 'image_url', image_url: { url: imageDataUrl } },
     ],
   },
@@ -194,3 +194,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

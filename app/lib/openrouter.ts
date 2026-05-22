@@ -1,6 +1,7 @@
 export type OpenRouterChatContent =
   | string
   | Array<
+      | { type: 'text'; text: string }
       | { type: 'input_text'; text: string }
       | { type: 'image_url'; image_url: { url: string } }
     >;
